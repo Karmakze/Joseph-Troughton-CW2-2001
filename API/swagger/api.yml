@@ -2,19 +2,32 @@ openapi: 3.0.0
 info:
   title: Trails API
   version: 1.0.0
+  description: A RESTful API to manage trails for the Trails Application.
+
 servers:
   - url: http://localhost:5000
-  
+    description: Local development server
+
 paths:
   /trails:
     get:
-      summary: Get all trails
+      summary: Retrieve all trails
+      description: Returns a list of all trails.
       operationId: app.routes.get_trails
       responses:
         "200":
-          description: A list of trails
+          description: A list of trails.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Trail'
+        "500":
+          description: Server error.
     post:
-      summary: Add a new trail
+      summary: Create a new trail
+      description: Adds a new trail to the database.
       operationId: app.routes.add_trail
       requestBody:
         required: true
@@ -22,17 +35,46 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/Trail'
+            example:
+              Trail_Name: "Dartmoor Hike"
+              Trail_Description: "A scenic route through Dartmoor."
+              Trail_Type: "Loop"
+              Trail_Difficulty: "Medium"
+              Trail_Distance: 10.5
+              Trail_Elevation_Gain: 500.2
+              Trail_Length: 5
+              Trail_Rating: 4.8
+              Trail_City_ID: 1
+              Trail_Creator: 1
       responses:
         "201":
-          description: Trail added
+          description: Trail created successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  Trail_ID:
+                    type: integer
+                example:
+                  message: "Trail added successfully"
+                  Trail_ID: 123
+        "400":
+          description: Invalid input.
+        "500":
+          description: Server error.
   /trails/{trail_id}:
     put:
-      summary: Update a trail
+      summary: Update an existing trail
+      description: Updates a trail with the given trail_id.
       operationId: app.routes.update_trail
       parameters:
         - name: trail_id
           in: path
           required: true
+          description: ID of the trail to update.
           schema:
             type: integer
       requestBody:
@@ -43,41 +85,71 @@ paths:
               $ref: '#/components/schemas/Trail'
       responses:
         "200":
-          description: Trail updated
+          description: Trail updated successfully.
+        "400":
+          description: Invalid input or trail_id not found.
+        "500":
+          description: Server error.
     delete:
       summary: Delete a trail
+      description: Deletes a trail with the given trail_id.
       operationId: app.routes.delete_trail
       parameters:
         - name: trail_id
           in: path
           required: true
+          description: ID of the trail to delete.
           schema:
             type: integer
       responses:
         "200":
-          description: Trail deleted
+          description: Trail deleted successfully.
+        "404":
+          description: Trail not found.
+        "500":
+          description: Server error.
+
 components:
   schemas:
     Trail:
       type: object
+      required:
+        - Trail_Name
+        - Trail_Type
+        - Trail_Difficulty
+        - Trail_City_ID
+        - Trail_Creator
       properties:
         Trail_Name:
           type: string
+          description: Name of the trail.
         Trail_Description:
           type: string
+          description: Description of the trail.
         Trail_Type:
           type: string
+          description: Type of the trail (e.g., Loop, Linear).
         Trail_Difficulty:
           type: string
+          description: Difficulty level of the trail (e.g., Easy, Medium, Hard).
         Trail_Distance:
           type: number
+          format: float
+          description: Distance of the trail in kilometers.
         Trail_Elevation_Gain:
           type: number
+          format: float
+          description: Elevation gain of the trail in meters.
         Trail_Length:
           type: integer
+          description: Length of the trail in hours.
         Trail_Rating:
           type: number
+          format: float
+          description: Average rating of the trail (0 to 5 scale).
         Trail_City_ID:
           type: integer
+          description: ID of the city where the trail is located.
         Trail_Creator:
           type: integer
+          description: ID of the user who created the trail.

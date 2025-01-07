@@ -27,10 +27,12 @@ def get_trails():
 # POST a new trail
 def add_trail():
     data = request.json
-    trail = Trail(**data)
-    db.session.add(trail)
-    db.session.commit()
-    return jsonify({"message": "Trail added successfully"}), 201
+    trail = Trail(**data)  
+    db.session.add(trail) 
+    db.session.commit()  
+
+    
+    return jsonify({"message": "Trail added successfully", "Trail_ID": trail.Trail_ID}), 201
 
 
 # PUT (update) a trail
