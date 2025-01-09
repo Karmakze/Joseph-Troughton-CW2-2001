@@ -1,13 +1,7 @@
 from flask import request, jsonify
 from .models import db, Trail, Users, City
 import requests
-
-# auth improts
-from .auth import token_required
 import jwt
-from datetime import datetime, timedelta
-key = "ApiEndpointsShouldWork"
-
 
 # GET all trails
 def get_trails():
@@ -74,23 +68,19 @@ def delete_trail(trail_id):
 def login ():
     auth_url = "https://web.socem.plymouth.ac.uk/COMP2001/auth/api/users"
     credentials = request.json
-    if not credentials or not credentials.get('username') or not credentials.get('password'):
+    if not credentials or not credentials.get('email') or not credentials.get('password'):
         return jsonify({"message": "Invalid input", "error_code": "400_INVALID_INPUT"}), 400
 
     response = requests.post(auth_url, json=credentials)
+    
     if response.status_code == 200:
+        # Parse response
         result = response.json()
         if result == ["Verified", "True"]:
-            # Create a JWT token
-            token = jwt.encode(
-                {
-                    "username": credentials['username'],
-                    "exp": datetime.utcnow() + timedelta(hours=1)  # Token expires in 1 hour
-                },
-                key,
-                algorithm="HS256"
-            )
-            return jsonify({"message": "Login successful", "token": token}), 200
+            return jsonify({"message": "Login successful"}), 200
         elif result == ["Verified", "False"]:
             return jsonify({"message": "Invalid credentials", "error_code": "401_UNAUTHORIZED"}), 401
-    return jsonify({"message": "Authentication server error", "error_code": "500_AUTH_SERVER_ERROR"}), 500
+        else:
+            return jsonify({"message": "Unexpected response from authentication server", "error_code": "500_AUTH_SERVER_ERROR"}), 500
+    else:
+        return jsonify({"message": "Authentication server error", "error_code": "500_AUTH_SERVER_ERROR"}), 500

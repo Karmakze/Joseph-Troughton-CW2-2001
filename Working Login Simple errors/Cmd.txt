@@ -1,0 +1,198 @@
+docker build -t ms_sql_docker_api .
+docker login
+docker tag ms_sql_docker_api karmakazeeee/ms_sql_docker_api
+docker push karmakazeeee/ms_sql_docker_api
+docker pull karmakazeeee/ms_sql_docker_api
+docker run -p 5000:5000 karmakazeeee/ms_sql_docker_api
+
+
+
+(TRAIL)
+TrailID - Sequence
+Trail name - lphabetic
+Trail Summary - Alphanumeric
+Trail Description - Alphanumeric
+Difficulty - Alphabetic
+Location - Alphabetic
+Length - Numeric
+Elevation gain - Numeric
+Route type - Alphabetic
+OwnerID* - Numeric
+
+(Trail-LocationPt)
+TrailID - Numeric
+Location_Point - Numeric
+Order_no - Numeric
+
+(LOCATION-POINT)
+Location_Point - Numeric
+Latitude - Numeric
+Longitude - Numeric
+Description - Alphanumeric
+
+(FEATURE)
+Trail FeatureID - Sequence
+Trail Feature - Alphabetic
+
+(TRAIL-FEATURE)
+TrailID - Numeric
+Trail FeatureID - Numeric
+
+(USER)
+UserID - Sequence
+Email_address - Alphanumeric
+Role - Alphabetic
+
+
+CREATE TABLE [CW1].[City] (
+    [City_ID]        INT            IDENTITY (1, 1) NOT NULL,
+    [City_Name]      NVARCHAR (256) NOT NULL,
+    [City_County_ID] INT            NOT NULL,
+    PRIMARY KEY CLUSTERED ([City_ID] ASC),
+    CONSTRAINT [FK_CityCounty] FOREIGN KEY ([City_County_ID]) REFERENCES [CW1].[County] ([County_ID]) ON DELETE CASCADE
+);
+
+CREATE TABLE [CW1].[Country] (
+    [Country_ID]   INT            IDENTITY (1, 1) NOT NULL,
+    [Country_Name] NVARCHAR (256) NOT NULL,
+    PRIMARY KEY CLUSTERED ([Country_ID] ASC)
+);
+
+CREATE TABLE [CW1].[Tags] (
+    [Tag_ID]   INT            IDENTITY (1, 1) NOT NULL,
+    [Tag_Name] NVARCHAR (128) NOT NULL,
+    PRIMARY KEY CLUSTERED ([Tag_ID] ASC),
+    CONSTRAINT [UNIQUE_TAG] UNIQUE NONCLUSTERED ([Tag_Name] ASC)
+);
+
+CREATE TABLE [CW1].[TrailAddLog] (
+    [Log_ID]          INT      IDENTITY (1, 1) NOT NULL,
+    [User_ID]         INT      NULL,
+    [Trail_ID]        INT      NULL,
+    [Added_Timestamp] DATETIME DEFAULT (getdate()) NULL,
+    PRIMARY KEY CLUSTERED ([Log_ID] ASC),
+    FOREIGN KEY ([Trail_ID]) REFERENCES [CW1].[Trails] ([Trail_ID]),
+    FOREIGN KEY ([User_ID]) REFERENCES [CW1].[Users] ([User_ID]),
+    CONSTRAINT [FK__TrailAddLog__Trail_ID] FOREIGN KEY ([Trail_ID]) REFERENCES [CW1].[Trails] ([Trail_ID]) ON DELETE CASCADE
+);
+
+CREATE TABLE [CW1].[Trails] (
+    [Trail_ID]             INT             IDENTITY (1, 1) NOT NULL,
+    [Trail_Name]           NVARCHAR (128)  NOT NULL,
+    [Trail_Description]    NVARCHAR (512)  NULL,
+    [Trail_Type]           NVARCHAR (25)   NULL,
+    [Trail_Difficulty]     NVARCHAR (10)   NULL,
+    [Trail_Distance]       DECIMAL (10, 2) NULL,
+    [Trail_Elevation_Gain] DECIMAL (6, 1)  NULL,
+    [Trail_Length]         INT             NULL,
+    [Trail_Rating]         DECIMAL (2, 1)  NULL,
+    [Trail_City_ID]        INT             NOT NULL,
+    [Trail_Creator]        INT             NOT NULL,
+    PRIMARY KEY CLUSTERED ([Trail_ID] ASC),
+    CHECK ([Trail_Difficulty]='HARD' OR [Trail_Difficulty]='MEDIUM' OR [Trail_Difficulty]='EASY'),
+    CHECK ([Trail_Distance]>=(0)),
+    CHECK ([Trail_Elevation_Gain]>=(0)),
+    CHECK ([Trail_Length]>=(0) AND [Trail_Length]<=(65535)),
+    CHECK ([Trail_Rating]>=(0) AND [Trail_Rating]<=(5)),
+    CONSTRAINT [FK_Trail_City] FOREIGN KEY ([Trail_City_ID]) REFERENCES [CW1].[City] ([City_ID]),
+    CONSTRAINT [FK_Trail_Creator] FOREIGN KEY ([Trail_Creator]) REFERENCES [CW1].[Users] ([User_ID])
+);
+
+
+GO
+CREATE TRIGGER CW1.LogTrailAddition
+ON CW1.Trails
+AFTER INSERT
+AS
+BEGIN
+    INSERT INTO CW1.TrailAddLog (User_ID, Trail_ID)
+    SELECT 
+        inserted.Trail_Creator, 
+        inserted.Trail_ID
+    FROM inserted;
+END;
+
+CREATE TABLE [CW1].[Users] (
+    [User_ID]      INT            IDENTITY (1, 1) NOT NULL,
+    [User_Email]   NVARCHAR (320) NOT NULL,
+    [User_Name]    NVARCHAR (128) NOT NULL,
+    [User_City_ID] INT            NULL,
+    PRIMARY KEY CLUSTERED ([User_ID] ASC),
+    CONSTRAINT [FK_User_City] FOREIGN KEY ([User_City_ID]) REFERENCES [CW1].[City] ([City_ID]),
+    CONSTRAINT [UNIQUE_USERNAME] UNIQUE NONCLUSTERED ([User_Name] ASC)
+);
+
+CREATE TABLE [CW1].[UserTrails] (
+    [User_ID]  INT NOT NULL,
+    [Trail_ID] INT NOT NULL,
+    CONSTRAINT [PK_UserTrails] PRIMARY KEY CLUSTERED ([User_ID] ASC, [Trail_ID] ASC),
+    CONSTRAINT [FK_Trail] FOREIGN KEY ([Trail_ID]) REFERENCES [CW1].[Trails] ([Trail_ID]) ON DELETE CASCADE,
+    CONSTRAINT [FK_User] FOREIGN KEY ([User_ID]) REFERENCES [CW1].[Users] ([User_ID]) ON DELETE CASCADE
+);
+
+CREATE TABLE [CW1].[UserTrailsTags] (
+    [User_ID]  INT NOT NULL,
+    [Trail_ID] INT NOT NULL,
+    [Tag_ID]   INT NOT NULL,
+    CONSTRAINT [PK_UserTrailsTags] PRIMARY KEY CLUSTERED ([User_ID] ASC, [Trail_ID] ASC, [Tag_ID] ASC),
+    CONSTRAINT [FK_Tag] FOREIGN KEY ([Tag_ID]) REFERENCES [CW1].[Tags] ([Tag_ID]) ON DELETE CASCADE,
+    CONSTRAINT [FK_TagTrail] FOREIGN KEY ([Trail_ID]) REFERENCES [CW1].[Trails] ([Trail_ID]) ON DELETE CASCADE,
+    CONSTRAINT [FK_TagUser] FOREIGN KEY ([User_ID]) REFERENCES [CW1].[Users] ([User_ID]) ON DELETE CASCADE,
+    CONSTRAINT [UQ_UserTrailTag] UNIQUE NONCLUSTERED ([User_ID] ASC, [Trail_ID] ASC, [Tag_ID] ASC)
+);
+
+
+ALTER SCHEMA CW2 TRANSFER CW1.City;
+ALTER SCHEMA CW2 TRANSFER CW1.Country;
+ALTER SCHEMA CW2 TRANSFER CW1.County;
+ALTER SCHEMA CW2 TRANSFER CW1.Tags;
+ALTER SCHEMA CW2 TRANSFER CW1.TrailAddLog;
+ALTER SCHEMA CW2 TRANSFER CW1.Trails;
+ALTER SCHEMA CW2 TRANSFER CW1.Users;
+ALTER SCHEMA CW2 TRANSFER CW1.UserTrails;
+ALTER SCHEMA CW2 TRANSFER CW1.UserTrailsTags;
+
+
+
+INSERT INTO CW2.County (County_Name, County_Country_ID)
+VALUES ('Cornwall', 3);
+
+
+INSERT INTO CW2.City (City_Name, City_County_ID)
+VALUES 
+    ('Plymouth', 1), 
+    ('Exeter', 1), 
+    ('Truro', 4); 
+
+
+INSERT INTO CW2.Users (User_Email, User_Name, User_City_ID)
+VALUES 
+    ('tim@plymouth.ac.uk', 'Tim Berners-Lee', 7),
+    ('ada@plymouth.ac.uk', 'Ada Lovelace', 1);
+
+
+INSERT INTO CW2.Trails 
+(Trail_Name, Trail_Description, Trail_Type, Trail_Difficulty, Trail_Distance, Trail_Elevation_Gain, Trail_Length, Trail_Rating, Trail_City_ID, Trail_Creator)
+VALUES 
+    ('Plymbridge Trail', 'A scenic trail in Devon', 'Circular', 'Easy', 5.5, 200, 2, 4.5, 1, 1), -- Plymouth
+    ('Dartmoor Walk', 'A challenging hike on Dartmoor', 'Linear', 'Hard', 12.3, 800, 5, 4.9, 7, 2); -- Exeter
+
+INSERT INTO CW2.Tags (Tag_Name)
+VALUES 
+    ('Scenic'), 
+    ('Family Friendly'), 
+    ('Historical');
+
+INSERT INTO CW2.UserTrails (User_ID, Trail_ID)
+VALUES 
+    (3, 11), -- Grace Hopper likes Plymbridge Trail
+    (5, 12); -- Tim Berners-Lee likes Dartmoor Walk
+
+
+INSERT INTO CW2.UserTrailsTags (User_ID, Trail_ID, Tag_ID)
+VALUES 
+    (3, 11, 12), -- Grace Hopper tagged Plymbridge Trail as "Scenic"
+    (5, 12, 13); -- Tim Berners-Lee tagged Dartmoor Walk as "Family Friendly"
+
+
+

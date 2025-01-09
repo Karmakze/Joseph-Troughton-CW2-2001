@@ -63,46 +63,6 @@ paths:
                   Trail_ID: 123
         "400":
           description: Invalid input.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                  error_code:
-                    type: string
-                example:
-                  message: "Invalid input format"
-                  error_code: "400_INVALID_INPUT"
-        "401":
-          description: Unauthorized access.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                  error_code:
-                    type: string
-                example:
-                  message: "Authentication required"
-                  error_code: "401_UNAUTHORIZED"
-        "409":
-          description: Conflict error (e.g., duplicate resource).
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                  error_code:
-                    type: string
-                example:
-                  message: "Trail name already exists"
-                  error_code: "409_CONFLICT"
         "500":
           description: Server error.
   /trails/{trail_id}:
@@ -128,8 +88,6 @@ paths:
           description: Trail updated successfully.
         "400":
           description: Invalid input or trail_id not found.
-        "404":
-          description: Trail not found.
         "500":
           description: Server error.
     delete:
@@ -148,104 +106,9 @@ paths:
           description: Trail deleted successfully.
         "404":
           description: Trail not found.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                  error_code:
-                    type: string
-                example:
-                  message: "Trail not found"
-                  error_code: "404_NOT_FOUND"
         "500":
           description: Server error.
 
-
-#auth
-  /login:
-    post:
-      summary: User login
-      description: Authenticates a user with email and password.
-      operationId: app.routes.login
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                email:
-                  type: string
-                  description: The email of the user.
-                password:
-                  type: string
-                  description: The password of the user.
-              required:
-                - email
-                - password
-            example:
-              email: "test_user"
-              password: "test_password"
-      responses:
-        "200":
-          description: Login successful.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-              example:
-                message: "Login successful"
-        "400":
-          description: Invalid input.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                  error_code:
-                    type: string
-              example:
-                message: "Invalid input"
-                error_code: "400_INVALID_INPUT"
-        "401":
-          description: Invalid credentials.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                  error_code:
-                    type: string
-              example:
-                message: "Invalid credentials"
-                error_code: "401_UNAUTHORIZED"
-        "500":
-          description: Authentication server error or unexpected response.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                  error_code:
-                    type: string
-              example:
-                message: "Authentication server error"
-                error_code: "500_AUTH_SERVER_ERROR"
-
-
-#schemas
 components:
   schemas:
     Trail:
