@@ -1,11 +1,11 @@
-docker build -t ms_sql_docker_api:v3 .
+docker build -t ms_sql_docker_api:v2 .
 docker login
-docker tag ms_sql_docker_api:v2 karmakazeeee/ms_sql_docker_api:v3
-docker push karmakazeeee/ms_sql_docker_api:v3
-docker pull karmakazeeee/ms_sql_docker_api:v3
-docker run -p 5000:5000 karmakazeeee/ms_sql_docker_api:v3
+docker tag ms_sql_docker_api:v2 karmakazeeee/ms_sql_docker_api:v2
+docker push karmakazeeee/ms_sql_docker_api:v2
+docker pull karmakazeeee/ms_sql_docker_api:v2
+docker run -p 5000:5000 karmakazeeee/ms_sql_docker_api:v2
 
-docker save -o karmakazeeee/ms_sql_docker_api:v3
+docker save -o karmakazeeee/ms_sql_docker_api:v2
 
 
 

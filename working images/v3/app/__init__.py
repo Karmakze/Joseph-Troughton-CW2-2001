@@ -12,7 +12,7 @@ key = "ApiEndpointsShouldWork"
 def verify_bearer_token(token):
     try:
         decoded = jwt.decode(token, key, algorithms=["HS256"])
-        print(f"Decoded token: {decoded}")  
+        print(f"Decoded token: {decoded}")  # Debugging
         return {"user_id": decoded.get("user_id")}
     except jwt.ExpiredSignatureError:
         raise OAuthProblem(description="Token has expired")
@@ -21,19 +21,22 @@ def verify_bearer_token(token):
 
 
 def create_app():
+    # Create the Connexion app
     app = connexion.App(__name__, specification_dir='../swagger', options={"swagger_ui": True})
 
-    # security handler for API
+    # Register the API with the security handler
     app.add_api(
         'api.yml',
         options={
             "swagger_ui": True,
-            "security_handlers": {"bearerAuth": verify_bearer_token} 
+            "security_handlers": {"bearerAuth": verify_bearer_token}  # Map bearerAuth to the handler
         }
     )
 
+    # Get the underlying Flask app
     flask_app = app.app
 
+    # Configure the database and register routes
     configure_database(flask_app)
     flask_app.register_blueprint(routes)
 

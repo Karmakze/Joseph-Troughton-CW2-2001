@@ -8,58 +8,6 @@ servers:
   - url: http://localhost:5000
     description: Local development server
 
-components:
-  securitySchemes:
-    bearerAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
-      x-bearerInfoFunc: app.verify_bearer_token  
-
-  schemas:
-    Trail:
-      type: object
-      required:
-        - Trail_Name
-        - Trail_Type
-        - Trail_Difficulty
-        - Trail_City_ID
-      properties:
-        Trail_Name:
-          type: string
-          description: Name of the trail.
-        Trail_Description:
-          type: string
-          description: Description of the trail.
-        Trail_Type:
-          type: string
-          description: Type of the trail (e.g., Loop, Linear).
-        Trail_Difficulty:
-          type: string
-          description: Difficulty level of the trail (e.g., Easy, Medium, Hard).
-        Trail_Distance:
-          type: number
-          format: float
-          description: Distance of the trail in kilometers.
-        Trail_Elevation_Gain:
-          type: number
-          format: float
-          description: Elevation gain of the trail in meters.
-        Trail_Length:
-          type: integer
-          description: Length of the trail in hours.
-        Trail_Rating:
-          type: number
-          format: float
-          description: Average rating of the trail (0 to 5 scale).
-        Trail_City_ID:
-          type: integer
-          description: ID of the city where the trail is located.
-        Trail_Creator:
-          type: integer
-          description: ID of the user who created the trail.
-
-
 paths:
   /trails:
     get:
@@ -81,8 +29,6 @@ paths:
       summary: Create a new trail
       description: Adds a new trail to the database.
       operationId: app.routes.add_trail
-      security:
-        - bearerAuth: []
       requestBody:
         required: true
         content:
@@ -99,6 +45,7 @@ paths:
               Trail_Length: 5
               Trail_Rating: 4.8
               Trail_City_ID: 1
+              Trail_Creator: 1
       responses:
         "201":
           description: Trail created successfully.
@@ -163,8 +110,6 @@ paths:
       summary: Update an existing trail
       description: Updates a trail with the given trail_id.
       operationId: app.routes.update_trail
-      security:
-        - bearerAuth: []
       parameters:
         - name: trail_id
           in: path
@@ -183,20 +128,6 @@ paths:
           description: Trail updated successfully.
         "400":
           description: Invalid input or trail_id not found.
-        "403":
-          description: Unauthorized access.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                  error_code:
-                    type: string
-                example:
-                  message: "You are not the creator of this trail"
-                  error_code: "403_FORBIDDEN"
         "404":
           description: Trail not found.
         "500":
@@ -205,8 +136,6 @@ paths:
       summary: Delete a trail
       description: Deletes a trail with the given trail_id.
       operationId: app.routes.delete_trail
-      security:
-        - bearerAuth: []
       parameters:
         - name: trail_id
           in: path
@@ -217,20 +146,6 @@ paths:
       responses:
         "200":
           description: Trail deleted successfully.
-        "403":
-          description: Unauthorized access.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                  error_code:
-                    type: string
-                example:
-                  message: "You are not the creator of this trail"
-                  error_code: "403_FORBIDDEN"
         "404":
           description: Trail not found.
           content:
@@ -247,6 +162,9 @@ paths:
                   error_code: "404_NOT_FOUND"
         "500":
           description: Server error.
+
+
+#auth
   /login:
     post:
       summary: User login
@@ -281,11 +199,8 @@ paths:
                 properties:
                   message:
                     type: string
-                  token:
-                    type: string
               example:
                 message: "Login successful"
-                token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
         "400":
           description: Invalid input.
           content:
@@ -330,3 +245,48 @@ paths:
                 error_code: "500_AUTH_SERVER_ERROR"
 
 
+#schemas
+components:
+  schemas:
+    Trail:
+      type: object
+      required:
+        - Trail_Name
+        - Trail_Type
+        - Trail_Difficulty
+        - Trail_City_ID
+        - Trail_Creator
+      properties:
+        Trail_Name:
+          type: string
+          description: Name of the trail.
+        Trail_Description:
+          type: string
+          description: Description of the trail.
+        Trail_Type:
+          type: string
+          description: Type of the trail (e.g., Loop, Linear).
+        Trail_Difficulty:
+          type: string
+          description: Difficulty level of the trail (e.g., Easy, Medium, Hard).
+        Trail_Distance:
+          type: number
+          format: float
+          description: Distance of the trail in kilometers.
+        Trail_Elevation_Gain:
+          type: number
+          format: float
+          description: Elevation gain of the trail in meters.
+        Trail_Length:
+          type: integer
+          description: Length of the trail in hours.
+        Trail_Rating:
+          type: number
+          format: float
+          description: Average rating of the trail (0 to 5 scale).
+        Trail_City_ID:
+          type: integer
+          description: ID of the city where the trail is located.
+        Trail_Creator:
+          type: integer
+          description: ID of the user who created the trail.

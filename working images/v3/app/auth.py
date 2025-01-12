@@ -8,13 +8,13 @@ def token_required(f):
     print("Token required")
     @wraps(f)
     def decorated(*args, **kwargs):
-        token = request.headers.get('Authorization')  
+        token = request.headers.get('Authorization')  # Expecting "Bearer <token>"
         print(f"Authorization header received: {token}")
         if not token:
             return jsonify({"message": "Token is missing", "error_code": "401_UNAUTHORIZED"}), 401
 
         try:
-            token = token.split()[1]  # remove bearer
+            token = token.split()[1]  # Remove "Bearer" prefix
             data = jwt.decode(token, key, algorithms=["HS256"])
             request.user = {"user_id": data["user_id"]}
         except jwt.ExpiredSignatureError:

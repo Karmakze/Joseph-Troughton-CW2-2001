@@ -5,18 +5,17 @@ from flask import request, jsonify
 key = "ApiEndpointsShouldWork"
 
 def token_required(f):
-    print("Token required")
     @wraps(f)
     def decorated(*args, **kwargs):
-        token = request.headers.get('Authorization')  
-        print(f"Authorization header received: {token}")
+        token = request.headers.get('Authorization')  # Expecting "Bearer <token>"
         if not token:
             return jsonify({"message": "Token is missing", "error_code": "401_UNAUTHORIZED"}), 401
 
         try:
-            token = token.split()[1]  # remove bearer
+            # Decode the token
+            token = token.split()[1]  # Remove "Bearer" prefix
             data = jwt.decode(token, key, algorithms=["HS256"])
-            request.user = {"user_id": data["user_id"]}
+            request.user = data  # Pass user info to the request context
         except jwt.ExpiredSignatureError:
             return jsonify({"message": "Token has expired", "error_code": "401_TOKEN_EXPIRED"}), 401
         except jwt.InvalidTokenError:
@@ -24,5 +23,4 @@ def token_required(f):
 
         return f(*args, **kwargs)
     return decorated
-
 
